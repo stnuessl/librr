@@ -68,6 +68,7 @@ used.
 ```
 
 How would the default alternative look with _-fno-exceptions_ enabled?
+
 ```cpp
     int div(int num, int denom, int &result, std::string &err_msg)
     {
@@ -96,10 +97,10 @@ How would the default alternative look with _-fno-exceptions_ enabled?
     }
     
     {
-        int err;
+        int val;
         std::string msg;
         
-        int val = div(100, 0, err, msg);
+        int err = div(100, 0, val, msg);
         if (err != 0)
             val = 42;
         
