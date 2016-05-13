@@ -36,7 +36,7 @@ install:
 	@mkdir -p $(DESTDIR)
 	cp $(HDR) $(DESTDIR)
 uninstall:
-	rm -f $(addprefix $(DESTDIR), $(HDR))
+	rm -f $(addprefix $(DESTDIR)/, $(notdir $(HDR)))
 clean:
 	rm -f $(TESTBIN)
 test:
