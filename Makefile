@@ -24,7 +24,7 @@
 
 CXX		:= /usr/bin/g++
 HDR		:= $(shell find ./src/lib/ -iname *.hpp)
-CPPFLAGS	:=
+CPPFLAGS	:= -Wall -Werror -Wpedantic
 CXXFLAGS	+= -O2 -fno-exceptions
 DESTDIR 	:= /usr/local/include/librr
 TESTSRC 	:= ./src/test/main.cpp

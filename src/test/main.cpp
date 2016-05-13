@@ -10,9 +10,11 @@
 #include <cassert>
 #include <cerrno>
 
-#include <librr/option.hpp>
-#include <librr/result.hpp>
+// #include <librr/option.hpp>
+// #include <librr/result.hpp>
 
+#include "../lib/option.hpp"
+#include "../lib/result.hpp"
 
 template <typename T>
 rr::result<T> divide(const T &num, const T &denom)
@@ -64,6 +66,12 @@ void test_option_simple()
     auto option = option_vector_valid();
     assert(option.ok());
     
+    auto &ref = option.value();
+    assert(ref.size() == 3);
+    assert(ref[0] == "Hello");
+    assert(ref[1] == ",");
+    assert(ref[2] == "World");
+    
     auto vec = option.take();
     
     assert(vec.size() == 3);
@@ -81,7 +89,6 @@ void test_option_simple()
 
 void test_result_simple()
 {
-    int val;
     auto result = result_num_valid();
     assert(result.ok());
     assert(result.take_or(7) == 42);
@@ -91,8 +98,12 @@ void test_result_simple()
     assert(!result.ok());
     assert(result.take_or(7) == 7);
     
+    assert(result.err().code() == 100);
+    assert(result.err().message() == "error message");
+    
     auto error = result.take_error();
-    assert(error.code() == 100 && error.message() == "error message");
+    assert(error.code() == 100);
+    assert(error.message() == "error message");
 }
 
 rr::result<int> random_number()

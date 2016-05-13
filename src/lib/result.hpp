@@ -41,12 +41,14 @@ public:
     
     bool ok() const;
     
-    error take_error();
-    
+    T &value();
+    const T &value() const;
     T take();
-    template <typename U>
-    T take_or(U &&alt);
+    template <typename U> T take_or(U &&alt);
     
+    const error &err() const;
+    error take_error();
+
 private:
     enum class state : unsigned char { 
 #ifndef NDEBUG
@@ -89,15 +91,17 @@ bool result<T>::ok() const
 }
 
 template <typename T>
-error result<T>::take_error()
+T &result<T>::value()
 {
-    assert(_state == result<T>::state::ERROR && "result has no error");
+    assert(_state == result<T>::state::VALUE && "result has no value");
+    return _val;
+}
 
-#ifndef NDEBUG    
-    _state = result<T>::state::CONSUMED;
-#endif
-    
-    return std::move(_err);
+template <typename T>
+const T &result<T>::value() const
+{
+    assert(_state == result<T>::state::VALUE && "result has no value");
+    return _val;
 }
 
 template <typename T>
@@ -126,6 +130,28 @@ T result<T>::take_or(U &&alt)
     
     return std::move(_val);
 }
+
+template <typename T>
+const error &result<T>::err() const
+{
+    assert(_state == result<T>::state::ERROR && "result has no error");
+    
+    return _err;
+}
+
+template <typename T>
+error result<T>::take_error()
+{
+    assert(_state == result<T>::state::ERROR && "result has no error");
+
+#ifndef NDEBUG    
+    _state = result<T>::state::CONSUMED;
+#endif
+    
+    return std::move(_err);
+}
+
+
 
 
 } /* namespace rr */

@@ -38,8 +38,10 @@ public:
     
     bool ok() const;
     
-    T take();
+    T &value();
+    const T &value() const;
     
+    T take();
     template <typename U>
     T take_or(U &&val);
 private:
@@ -65,6 +67,22 @@ template <typename T>
 bool option<T>::ok() const
 {
     return _ok;
+}
+
+template <typename T>
+T &option<T>::value()
+{
+    assert(_ok && "option has no value");
+    
+    return _val;
+}
+
+template <typename T>
+const T &option<T>::value() const
+{
+    assert(_ok && "option has no value");
+    
+    return _val;
 }
 
 template <typename T>
