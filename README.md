@@ -4,6 +4,13 @@ A very simple C++ header only library which helps to avoid exceptions by
 providing return wrapper types capable of holding either the return value or an
 error value.
 
+## Motivation
+
+This library provides a decent mechanism for error reporting in the absence of
+exceptions (e.g. a project uses the _-fno-exceptions_ flag) via return values.
+The intention is to avoid additional function arguments which are normally
+used in such scenarious and encapsulate them into a single return value.
+
 ## Installation
 
 Simply run:
@@ -24,7 +31,7 @@ Use __# make uninstall__ if you want to remove the files from your system.
 The library disables safety checks if the preprocessor directive "NDEBUG" is
 specified. This can introduce undefined behaviour if you call _.take()_ or
 _.take_error()_ serveral times on the same object. Also you are __always__
-supposed to check with _.ok()_ if an value is present before _.take()_ing it.
+supposed to check with _.ok()_ if an value is present before _.take()_ ing it.
 
 ## Usage examples
 
@@ -62,27 +69,26 @@ used.
 
 How would the default alternative look with _-fno-exceptions_ enabled?
 ```cpp
-    int div(int num, int denom, int &err, std::string &err_msg)
+    int div(int num, int denom, int &result, std::string &err_msg)
     {
         err_msg.clear();
         
         if (denom == 0) {
-            err = EINVAL;
             err_msg += "denominator is zero";
-            return 0.0;
+            return EINVAL;
         }
         
-        err = 0;
-        return num / denom;
+        result = num / denom;
+        return 0;
     }
     
     {
-        int err;
+        int result;
         std::string msg;
         
-        int val = div(val1, val2, err, msg);
+        int err = div(val1, val2, result, msg);
         if (err == 0) {
-            std::cout << "Result is: " << val << "\n";
+            std::cout << "Result is: " << result << "\n";
         } else {
             std::cerr << "Error: " << msg << " , error code: " 
                       << err.code() << "\n";
