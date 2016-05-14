@@ -29,13 +29,11 @@
 #include <cstdlib>
 
 namespace rr {
-    
-struct nullopt_t { } nullopt;
 
 template <typename T>
 class option {
 public:
-    option(nullopt_t opt = nullopt);
+    option();
     option(const T &val);
     option(T &&val);
     
@@ -58,11 +56,10 @@ private:
 };
 
 template <typename T>
-option<T>::option(nullopt_t opt)
+option<T>::option()
     : _val(),
       _ok(false)
 {
-    (void) opt;
 }
 
 template <typename T>

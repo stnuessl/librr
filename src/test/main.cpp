@@ -137,9 +137,9 @@ rr::option<std::string> get_environ_val(const char *var)
 {
     auto val = std::getenv(var);
     if (val)
-        return std::string(val);
+        return { std::string(val) };
     
-    return rr::nullopt;
+    return { };
 }
 
 void example_option()
@@ -161,19 +161,19 @@ rr::result<FILE *> open_for_reading(const char *path)
         msg += path;
         msg += "\"";
         
-        return rr::error(errno, std::move(msg));
+        return { rr::error(errno, std::move(msg)) };
     }
     
-    return file;
+    return { file };
 }
 
 template <typename T>
 rr::result<T> divide(const T &num, const T &denom)
 {
     if (denom != static_cast<T>(0))
-        return num / denom;
+        return { num / denom };
     
-    return rr::error(EINVAL, "invalid denominator");
+    return { rr::error(EINVAL, "invalid denominator") };
 }
 
 void example_result()
