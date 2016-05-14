@@ -29,12 +29,18 @@
 #include <cstdlib>
 
 namespace rr {
+    
+struct nullopt_t { } nullopt;
 
 template <typename T>
 class option {
 public:
-    option();
-    explicit option(T &&val);
+    option(nullopt_t opt = nullopt);
+    option(const T &val);
+    option(T &&val);
+    
+    option<T> &operator=(const T &val);
+    option<T> &operator=(T &&val);
     
     bool ok() const;
     
@@ -52,9 +58,17 @@ private:
 };
 
 template <typename T>
-option<T>::option()
+option<T>::option(nullopt_t opt)
     : _val(),
       _ok(false)
+{
+    (void) opt;
+}
+
+template <typename T>
+option<T>::option(const T &val)
+    : _val(val),
+      _ok(true)
 {
 }
 
@@ -63,6 +77,24 @@ option<T>::option(T &&val)
     : _val(std::move(val)),
       _ok(true)
 {
+}
+
+template <typename T>
+option<T> &option<T>::operator=(const T &val)
+{
+    _val = val;
+    _ok = true;
+    
+    return *this;
+}
+
+template <typename T>
+option<T> &option<T>::operator=(T &&val)
+{
+    _val = std::move(val);
+    _ok = true;
+    
+    return *this;
 }
 
 template <typename T>

@@ -32,8 +32,7 @@ namespace rr {
 
 class error {
 public:
-    error();
-    explicit error(int code, const char *msg = nullptr);
+    explicit error(int code = 0, const char *msg = nullptr);
     error(int code, const std::string &msg);
     error(int code, std::string &&msg);
     
@@ -43,11 +42,6 @@ private:
     int _code;
     std::string _msg;
 };
-
-error::error()
-    : error(0)
-{
-}  
 
 error::error(int code, const char *msg)
     : _code(code),

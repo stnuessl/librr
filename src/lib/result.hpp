@@ -35,9 +35,14 @@ namespace rr {
 template <typename T>
 class result {
 public:
-    explicit result(const T &val);
-    explicit result(T &&val);
-    explicit result(error &&err);
+    result(const T &val);
+    result(T &&val);
+    result(error &&err);
+    
+    result<T> &operator=(const T &val);
+    result<T> &operator=(T &&val);
+    result<T> &operator=(const error &err);
+    result<T> &operator=(error &&err);
     
     bool ok() const;
     
@@ -84,6 +89,42 @@ result<T>::result(error &&err)
     : _err(std::move(err)),
       _state(result<T>::state::ERROR)
 {
+}
+
+template <typename T>
+result<T> &result<T>::operator=(const T &val)
+{
+    _val = val;
+    _state = result<T>::state::VALUE;
+    
+    return *this;
+}
+
+template <typename T>
+result<T> &result<T>::operator=(T &&val)
+{
+    _val = std::move(val);
+    _state = result<T>::state::VALUE;
+    
+    return *this;
+}
+
+template <typename T>
+result<T> &result<T>::operator=(const error &err)
+{
+    _err = err;
+    _state = result<T>::state::ERROR;
+    
+    return *this;
+}
+
+template <typename T>
+result<T> &result<T>::operator=(error &&err)
+{
+    _err = std::move(err);
+    _state = result<T>::state::ERROR;
+    
+    return *this;
 }
 
 template <typename T>
