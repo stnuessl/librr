@@ -41,9 +41,11 @@ public:
     
     bool ok() const;
     
-    T &value();
-    const T &value() const;
-    T take();
+    T &value() &;
+    T &&value() &&;
+    const T &value() const &;
+    const T &&value() const &&;
+    T &&take();
     template <typename U> T take_or(U &&alt);
     
     const error &err() const;
@@ -91,21 +93,39 @@ bool result<T>::ok() const
 }
 
 template <typename T>
-T &result<T>::value()
+T &result<T>::value() &
 {
     assert(_state == result<T>::state::VALUE && "result has no value");
+    
     return _val;
 }
 
 template <typename T>
-const T &result<T>::value() const
+T &&result<T>::value() &&
 {
     assert(_state == result<T>::state::VALUE && "result has no value");
+    
+    return std::move(_val);
+}
+
+template <typename T>
+const T &result<T>::value() const &
+{
+    assert(_state == result<T>::state::VALUE && "result has no value");
+    
     return _val;
 }
 
 template <typename T>
-T result<T>::take()
+const T &&result<T>::value() const &&
+{
+    assert(_state == result<T>::state::VALUE && "result has no value");
+    
+    return std::move(_val);
+}
+
+template <typename T>
+T &&result<T>::take()
 {
     assert(_state == result<T>::state::VALUE && "result has no value");
     
