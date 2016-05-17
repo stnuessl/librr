@@ -1,4 +1,26 @@
-
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2016 Steffen Nuessle
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #include <vector>
 #include <string>
@@ -15,21 +37,6 @@
 
 #include "../lib/option.hpp"
 #include "../lib/result.hpp"
-
-void test_error()
-{
-    auto err_msg = "This is a very descriptive error message";
-    
-    assert(rr::error(EINVAL).code() == EINVAL);
-    assert(rr::error(EINVAL).message() == "(null)");
-    assert(rr::error(EINVAL, err_msg).message() == err_msg);
-    
-    auto err = rr::error(EPERM);
-    err = rr::error(EINVAL, err_msg);
-    
-    assert(err.code() == EINVAL);
-    assert(err.message() == err_msg);
-}
 
 void test_option()
 {
@@ -72,65 +79,95 @@ void test_option()
 
 void test_result()
 {
-    auto err_msg = "This is a very descriptive error message";
-    
-    assert(!rr::result<int>(rr::error()).ok());
-    assert(rr::result<int>(0).ok());
-    assert(rr::result<int>(42).value() == 42);
-    assert(rr::result<int>(42).take() == 42);
-    assert(rr::result<int>(42).take_or(100) == 42);
-    assert(rr::result<int>(rr::error()).take_or(42) == 42);
-    assert(!rr::result<int>(rr::error(0)).ok());
-    assert(rr::result<int>(rr::error(EINVAL)).err().code() == EINVAL);
-    assert(rr::result<int>(rr::error(0, err_msg)).err().message() == err_msg);
-    
-    auto error01 = rr::error(EINVAL, err_msg);
-    auto result01 = rr::result<std::vector<std::string>>(std::move(error01));
+    auto result01 = rr::result<bool, int>(0);
     assert(!result01.ok());
-    assert(result01.err().code() == EINVAL);
-    assert(result01.err().message() == err_msg);
-    assert(!result01.ok());
+    assert(result01.err());
+    assert(result01.ok() != result01.err());
+    assert(result01.error() == 0);
+    assert(result01.take_or(true));
+    (void) result01;
     
-    result01 = std::vector<std::string>({ "A", "B", "C", "D" });
-    assert(result01.ok());
-    assert(result01.value()[0] == "A");
-    assert(result01.value()[1] == "B");
-    assert(result01.value()[2] == "C");
-    assert(result01.value()[3] == "D");
-    assert(result01.value().size() == 4);
-    assert(result01.ok());
+    rr::result<std::string, bool> result02 = false;
+    assert(result02.err());
+    assert(!result02.ok());
+    assert(result02.ok() != result02.err());
+    assert(result02.error() == false);
+    assert(result02.take_or("Hello, World!") == "Hello, World!");
+    (void) result02;
+
+    auto result03 = rr::result<unsigned int, int>(0U);
+    assert(result03.ok());
+    assert(result03.value() == 0);
+    assert(result03.take_or(42) == 0);
+    result03 = 0U;
+    result03.value() = 42;
+    assert(result03.value() == 42);
+    (void) result03;
     
-    auto v = result01.take();
-    assert(!result01.ok());
-    assert(v[0] == "A");
-    assert(v[1] == "B");
-    assert(v[2] == "C");
-    assert(v[3] == "D");
-    assert(v.size() == 4);
+    auto result04 = rr::result<int, std::string>("Hello, World!");
+    assert(result04.err());
+    assert(result04.error() == "Hello, World!");
+    (void) result04;
     
-    result01 = rr::error(0);
-    assert(result01.take_or(std::vector<std::string>()).empty());
-    result01 = std::vector<std::string>({ "X", "Y", "Z" });
-    assert(result01.ok());
-    assert(result01.value()[0] == "X");
-    assert(result01.value()[1] == "Y");
-    assert(result01.value()[2] == "Z");
-    assert(result01.value().size() == 3);
-    assert(result01.ok());
+    auto result05 = rr::result<std::string, int>("Hello, World!");
+    assert(result05.ok());
+    assert(result05.value() == "Hello, World!");
+    assert(result05.take() == "Hello, World!");
     
-    auto result02 = rr::result<std::vector<std::string>>(rr::error());
-    result02 = result01.take();
-    assert(!result01.ok());
-    assert(result02.ok());
+    result05 = "Goodbye, World!";
+    assert(result05.ok());
+    assert(result05.value() == "Goodbye, World!");
     
-    rr::result<std::vector<std::string>> result03 = rr::error();
-    assert(!result03.ok());
-    rr::result<std::vector<std::string>> result04 = result02.take();
-    assert(result04.ok());
-    assert(result04.value()[0] == "X");
-    assert(result04.value()[1] == "Y");
-    assert(result04.value()[2] == "Z");
-    assert(result04.value().size() == 3);
+    result05 = EINVAL;
+    assert(!result05.ok());
+    assert(result05.err());
+    assert(result05.error() == EINVAL);
+    (void) result05;
+    
+    auto result06 = rr::result<std::vector<std::string>, int>(0);
+    result06 = std::vector<std::string>({ "A", "B", "C", "D" });
+    assert(result06.ok());
+    assert(!result06.err());
+    assert(result06.value()[0] == "A");
+    assert(result06.value()[1] == "B");
+    assert(result06.value()[2] == "C");
+    assert(result06.value()[3] == "D");
+    assert(result06.value().size() == 4);
+    
+    auto v1 = result06.take();
+    assert(v1[0] == "A");
+    assert(v1[1] == "B");
+    assert(v1[2] == "C");
+    assert(v1[3] == "D");
+    assert(v1.size() == 4);
+    
+    result06 = EINVAL;
+    assert(result06.take_or(v1)[3] == "D");
+    assert(result06.take_or(std::move(v1))[3] == "D");
+    assert(result06.err());
+    
+    result06 = std::vector<std::string>({ "X", "Y", "Z" });
+    assert(result06.value()[0] == "X");
+    assert(result06.value()[1] == "Y");
+    assert(result06.value()[2] == "Z");
+    assert(result06.value().size() == 3);
+    assert(result06.ok());
+
+    auto result07 = std::move(result06);
+    assert(result07.ok());
+    (void) result06;
+    auto result08 = result07;
+    assert(result07.ok());
+    assert(result08.ok());
+    (void) result07;
+    
+    rr::result<std::vector<std::string>, double> result09 = result08.take();
+    assert(result09.ok());
+    assert(result09.value()[0] == "X");
+    assert(result09.value()[1] == "Y");
+    assert(result09.value()[2] == "Z");
+    assert(result09.value().size() == 3);
+    (void) result09;
 }
 
 rr::option<std::string> get_environ_val(const char *var)
@@ -151,29 +188,23 @@ void example_option()
     assert(get_environ_val("ABC").take_or("XYZ") == "XYZ");
 }
 
-rr::result<FILE *> open_for_reading(const char *path)
+
+rr::result<FILE *, int> open_for_reading(const char *path)
 {
     FILE *file = std::fopen(path, "r");
-    if (!file) {
-        std::string msg;
-        msg.reserve(64);
-        msg += "failed to open \"";
-        msg += path;
-        msg += "\"";
-        
-        return { rr::error(errno, std::move(msg)) };
-    }
-    
-    return { file };
+    if (!file)
+        return { errno };
+    else 
+        return { file };
 }
 
 template <typename T>
-rr::result<T> divide(const T &num, const T &denom)
+rr::result<T, std::string> divide(const T &num, const T &denom)
 {
     if (denom != static_cast<T>(0))
         return { num / denom };
-    
-    return { rr::error(EINVAL, "invalid denominator") };
+    else 
+        return { "division by zero" };
 }
 
 void example_result()
@@ -182,17 +213,20 @@ void example_result()
     assert(result01.ok());
     assert(result01.value() != nullptr);
     assert(fclose(result01.take()) == 0);
+    (void) result01;
     
     auto result02 = open_for_reading("/dev/mem");
     assert(!result02.ok());
-    assert(result02.err().code() == EACCES);
+    assert(result02.err());
+    assert(result02.error() == EACCES);
+    (void) result02;
     
     assert(divide(1, 1).ok());
     assert(divide(1, 1).value() == 1);
     assert(divide(1, 1).take() == 1);
     assert(!divide(1, 0).ok());
     assert(divide(1, 0).take_or(1) == 1);
-    assert(divide(1, 0).err().code() == EINVAL);
+    assert(divide(1, 0).error() == "division by zero");
 }
 
 int main(int argc, char *argv[])
@@ -207,7 +241,6 @@ int main(int argc, char *argv[])
     (void) argc;
     (void) argv;
     
-    test_error();
     test_option();
     test_result();
     

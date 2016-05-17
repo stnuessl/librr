@@ -28,34 +28,33 @@
 #include <utility>
 #include <cassert>
 
-#include "error.hpp"
-
 namespace rr {
 
-template <typename T>
+template <typename V, typename E>
 class result {
 public:
-    result(const T &val);
-    result(T &&val);
-    result(error &&err);
+    result(const V &val);
+    result(V &&val);
+    result(const E &err);
+    result(E &&err);
     
-    result<T> &operator=(const T &val);
-    result<T> &operator=(T &&val);
-    result<T> &operator=(const error &err);
-    result<T> &operator=(error &&err);
+    result<V, E> &operator=(const V &val);
+    result<V, E> &operator=(V &&val);
+    result<V, E> &operator=(const E &err);
+    result<V, E> &operator=(E &&err);
     
     bool ok() const;
+    bool err() const;
     
-    T &value() &;
-    T &&value() &&;
-    const T &value() const &;
-    const T &&value() const &&;
-    T &&take();
-    template <typename U> T take_or(U &&alt);
+    V &value() &;
+    V &&value() &&;
+    const V &value() const &;
+    const V &&value() const &&;
+    V &&take();
+    template <typename T> V take_or(T &&alt);
     
-    const error &err() const;
-    error take_error();
-
+    const E &error() const &;
+    const E &&error() const &&;
 private:
     enum class state : unsigned char { 
 #ifndef NDEBUG
@@ -65,154 +64,161 @@ private:
         VALUE, 
     };
 
-    T _val;
-    error _err;
+    V _val;
+    E _err;
     enum state _state;
 };
 
-template <typename T>
-result<T>::result(const T &val)
+template <typename V, typename E>
+result<V, E>::result(const V &val)
     : _val(val),
-      _state(result<T>::state::VALUE)
+      _state(state::VALUE)
 {
 }
 
-template <typename T>
-result<T>::result(T &&val)
+template <typename V, typename E>
+result<V, E>::result(V &&val)
     : _val(std::move(val)),
-      _state(result<T>::state::VALUE)
+      _state(state::VALUE)
 {
 }
 
-template <typename T>
-result<T>::result(error &&err)
+template <typename V, typename E>
+result<V, E>::result(const E &err)
+    : _err(err),
+      _state(state::ERROR)
+{
+}
+
+template <typename V, typename E>
+result<V, E>::result(E &&err)
     : _err(std::move(err)),
-      _state(result<T>::state::ERROR)
+      _state(state::ERROR)
 {
 }
 
-template <typename T>
-result<T> &result<T>::operator=(const T &val)
+template <typename V, typename E>
+result<V, E> &result<V, E>::operator=(const V &val)
 {
     _val = val;
-    _state = result<T>::state::VALUE;
+    _state = state::VALUE;
     
     return *this;
 }
 
-template <typename T>
-result<T> &result<T>::operator=(T &&val)
+template <typename V, typename E>
+result<V, E> &result<V, E>::operator=(V &&val)
 {
     _val = std::move(val);
-    _state = result<T>::state::VALUE;
+    _state = state::VALUE;
     
     return *this;
 }
 
-template <typename T>
-result<T> &result<T>::operator=(const error &err)
+template <typename V, typename E>
+result<V, E> &result<V, E>::operator=(const E &err)
 {
     _err = err;
-    _state = result<T>::state::ERROR;
+    _state = state::ERROR;
     
     return *this;
 }
 
-template <typename T>
-result<T> &result<T>::operator=(error &&err)
+template <typename V, typename E>
+result<V, E> &result<V, E>::operator=(E &&err)
 {
     _err = std::move(err);
-    _state = result<T>::state::ERROR;
+    _state = state::ERROR;
     
     return *this;
 }
 
-template <typename T>
-bool result<T>::ok() const
+template <typename V, typename E>
+bool result<V, E>::ok() const
 {
-    return _state == result<T>::state::VALUE;
+    return _state == state::VALUE;
 }
 
-template <typename T>
-T &result<T>::value() &
+template <typename V, typename E>
+bool result<V, E>::err() const
 {
-    assert(_state == result<T>::state::VALUE && "result has no value");
+    return _state == state::ERROR;
+}
+
+template <typename V, typename E>
+V &result<V, E>::value() &
+{
+    assert(_state == state::VALUE && "result has no value");
     
     return _val;
 }
 
-template <typename T>
-T &&result<T>::value() &&
+template <typename V, typename E>
+V &&result<V, E>::value() &&
 {
-    assert(_state == result<T>::state::VALUE && "result has no value");
+    assert(_state == state::VALUE && "result has no value");
     
     return std::move(_val);
 }
 
-template <typename T>
-const T &result<T>::value() const &
+template <typename V, typename E>
+const V &result<V, E>::value() const &
 {
-    assert(_state == result<T>::state::VALUE && "result has no value");
+    assert(_state == state::VALUE && "result has no value");
     
     return _val;
 }
 
-template <typename T>
-const T &&result<T>::value() const &&
+template <typename V, typename E>
+const V &&result<V, E>::value() const &&
 {
-    assert(_state == result<T>::state::VALUE && "result has no value");
+    assert(_state == state::VALUE && "result has no value");
     
     return std::move(_val);
 }
 
-template <typename T>
-T &&result<T>::take()
+template <typename V, typename E>
+V &&result<V, E>::take()
 {
-    assert(_state == result<T>::state::VALUE && "result has no value");
+    assert(_state == state::VALUE && "result has no value");
     
 #ifndef NDEBUG
-    _state = result<T>::state::CONSUMED;
+    _state = state::CONSUMED;
 #endif
     
     return std::move(_val);
 }
 
-template <typename T> template <typename U>
-T result<T>::take_or(U &&alt)
+template <typename V, typename E> template <typename T>
+V result<V, E>::take_or(T &&alt)
 {
-    assert(_state != result<T>::state::CONSUMED && "result already consumed");
+    assert(_state != state::CONSUMED && "result already consumed");
     
-    if (_state == result<T>::state::ERROR)
-        return static_cast<T>(std::forward<U>(alt));
+    if (_state == state::ERROR)
+        return static_cast<V>(std::forward<T>(alt));
     
 #ifndef NDEBUG
-    _state = result<T>::state::CONSUMED;
+    _state = state::CONSUMED;
 #endif
     
     return std::move(_val);
 }
 
-template <typename T>
-const error &result<T>::err() const
+template <typename V, typename E>
+const E &result<V, E>::error() const &
 {
-    assert(_state == result<T>::state::ERROR && "result has no error");
+    assert(_state == state::ERROR && "result has no error");
     
     return _err;
 }
 
-template <typename T>
-error result<T>::take_error()
+template <typename V, typename E>
+const E &&result<V, E>::error() const &&
 {
-    assert(_state == result<T>::state::ERROR && "result has no error");
-
-#ifndef NDEBUG    
-    _state = result<T>::state::CONSUMED;
-#endif
+    assert(_state == state::ERROR && "result has no error");
     
     return std::move(_err);
 }
-
-
 
 
 } /* namespace rr */
