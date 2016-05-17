@@ -81,16 +81,16 @@ void test_result()
 {
     auto result01 = rr::result<bool, int>(0);
     assert(!result01.ok());
-    assert(result01.err());
-    assert(result01.ok() != result01.err());
+    assert(result01.bad());
+    assert(result01.ok() != result01.bad());
     assert(result01.error() == 0);
     assert(result01.take_or(true));
     (void) result01;
     
     rr::result<std::string, bool> result02 = false;
-    assert(result02.err());
+    assert(result02.bad());
     assert(!result02.ok());
-    assert(result02.ok() != result02.err());
+    assert(result02.ok() != result02.bad());
     assert(result02.error() == false);
     assert(result02.take_or("Hello, World!") == "Hello, World!");
     (void) result02;
@@ -105,7 +105,7 @@ void test_result()
     (void) result03;
     
     auto result04 = rr::result<int, std::string>("Hello, World!");
-    assert(result04.err());
+    assert(result04.bad());
     assert(result04.error() == "Hello, World!");
     (void) result04;
     
@@ -120,14 +120,14 @@ void test_result()
     
     result05 = EINVAL;
     assert(!result05.ok());
-    assert(result05.err());
+    assert(result05.bad());
     assert(result05.error() == EINVAL);
     (void) result05;
     
     auto result06 = rr::result<std::vector<std::string>, int>(0);
     result06 = std::vector<std::string>({ "A", "B", "C", "D" });
     assert(result06.ok());
-    assert(!result06.err());
+    assert(!result06.bad());
     assert(result06.value()[0] == "A");
     assert(result06.value()[1] == "B");
     assert(result06.value()[2] == "C");
@@ -144,7 +144,7 @@ void test_result()
     result06 = EINVAL;
     assert(result06.take_or(v1)[3] == "D");
     assert(result06.take_or(std::move(v1))[3] == "D");
-    assert(result06.err());
+    assert(result06.bad());
     
     result06 = std::vector<std::string>({ "X", "Y", "Z" });
     assert(result06.value()[0] == "X");
@@ -217,7 +217,7 @@ void example_result()
     
     auto result02 = open_for_reading("/dev/mem");
     assert(!result02.ok());
-    assert(result02.err());
+    assert(result02.bad());
     assert(result02.error() == EACCES);
     (void) result02;
     

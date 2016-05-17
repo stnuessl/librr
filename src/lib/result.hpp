@@ -44,7 +44,7 @@ public:
     result<V, E> &operator=(E &&err);
     
     bool ok() const;
-    bool err() const;
+    bool bad() const;
     
     V &value() &;
     V &&value() &&;
@@ -140,7 +140,7 @@ bool result<V, E>::ok() const
 }
 
 template <typename V, typename E>
-bool result<V, E>::err() const
+bool result<V, E>::bad() const
 {
     return _state == state::ERROR;
 }
