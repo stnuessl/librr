@@ -41,6 +41,7 @@ public:
     option<T> &operator=(T &&val);
     
     bool ok() const;
+    bool bad() const;
     
     T &value() &;
     T &&value() &&;
@@ -98,6 +99,12 @@ template <typename T>
 bool option<T>::ok() const
 {
     return _ok;
+}
+
+template <typename T>
+bool option<T>::bad() const
+{
+    return !_ok;
 }
 
 template <typename T>
