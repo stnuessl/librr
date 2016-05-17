@@ -29,8 +29,8 @@ Use __# make uninstall__ if you want to remove the files from your system.
 ## General Notes
 
 The library disables safety checks if the preprocessor directive "NDEBUG" is
-specified. This can introduce undefined behaviour if you call _.take()_ or
-_.take_error()_ serveral times on the same object. Also you are __always__
+specified. This can introduce undefined behaviour if you call _.take()_
+serveral times on the same object. Also you are __always__
 supposed to check with _.ok()_ if an value is present before _.take()_ ing it.
 
 ## Usage examples
